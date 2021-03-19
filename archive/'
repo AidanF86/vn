@@ -1,0 +1,200 @@
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include "fileInput.h"
+
+#define WINDOWWIDTH 1280
+#define WINDOWHEIGHT 900
+
+#define BOXALPHA 120
+#define BOXPADDINGX 70
+#define BOXPADDINGY 70
+#define OUTLINEPADDING 3
+#define OUTLINECOUNT 2
+
+#define TEXTHEIGHT 35
+#define TEXTWIDTH 20
+#define TEXTPADDINGX 30
+#define TEXTPADDINGY 15
+#define CHARACTERSPACING 0
+#define LINESPACING 2
+
+#define CHARACTERS_PER_LINE 50
+#define LINES_PER_PAGE 10
+
+SDL_Texture *glyphs[128-20];
+
+SDL_Texture *background;
+
+TTF_Font *mainFont;
+
+int currentLocation = 0;
+
+void renderCharacter(char ch, int line, int charInLine, SDL_Renderer *renderer)
+{
+    int xOffset = BOXPADDINGX + TEXTPADDINGX + charInLine * (TEXTWIDTH + CHARACTERSPACING);
+    int yOffset = BOXPADDINGY + TEXTPADDINGY + line * (TEXTHEIGHT * LINESPACING);
+    SDL_Rect character = {xOffset, yOffset, TEXTWIDTH, TEXTHEIGHT};
+    SDL_RenderCopy(renderer, glyphs[(int)ch - 20], NULL, &character);
+}
+
+void renderNextLine(SDL_Renderer *renderer)
+{
+    int charInLine = 0;
+    int line = 0;
+    char ch = text[currentLocation];
+    while(currentLocation < textSize && ch != '\n')
+    {
+        if(charInLine >= CHARACTERS_PER_LINE)
+        {
+            charInLine = 0;
+            line++;
+        }
+
+        char ch = text[currentLocation];
+        renderCharacter(ch, line, charInLine, renderer);
+    }
+    line++;
+    charInLine = 0;
+}
+
+void doRender(SDL_Renderer *renderer)
+{
+    //Set the drawing color to blue
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    
+        //Clear the screen (to blue)
+    SDL_RenderClear(renderer);
+
+    //Set the drawing color to white
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    SDL_Rect bgRect = {0, 0, WINDOWWIDTH, WINDOWHEIGHT};
+    SDL_RenderCopy(renderer, background, NULL, &bgRect);
+
+    //Render the text box
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, BOXALPHA);
+    SDL_Rect textBox = {BOXPADDINGX, BOXPADDINGY, WINDOWWIDTH - BOXPADDINGX * 2, WINDOWHEIGHT - BOXPADDINGY * 2};
+    SDL_RenderFillRect(renderer, &textBox);
+    
+    for(int i = 1; i <= OUTLINECOUNT; i++)
+    {
+        SDL_Rect textBoxOutline = {BOXPADDINGX - i * OUTLINEPADDING, BOXPADDINGY - i * OUTLINEPADDING, WINDOWWIDTH - BOXPADDINGX * 2 + i * 2 * OUTLINEPADDING, WINDOWHEIGHT - BOXPADDINGY * 2 + i * 2* OUTLINEPADDING};
+        SDL_RenderDrawRect(renderer, &textBoxOutline);
+    }
+
+    renderNextLine(renderer);
+    
+    SDL_RenderPresent(renderer);
+}
+
+int processEvents(SDL_Window *window)
+{
+    SDL_Event event;
+    short done = 0;
+
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+            case SDL_WINDOWEVENT_CLOSE:
+            {
+                if(window)
+                {
+                    SDL_DestroyWindow(window);
+                    window = NULL;
+                    done = 1;
+                }
+            }
+            case SDL_QUIT:
+                done = 1;
+            break;
+        }
+    }
+    
+    return done;
+}
+
+int main()
+{
+    SDL_Window *window = NULL;
+    SDL_Renderer *renderer = NULL;
+
+    SDL_Init(SDL_INIT_VIDEO);
+    window = SDL_CreateWindow("Game Window",
+            SDL_WINDOWPOS_UNDEFINED, //Initial x
+            SDL_WINDOWPOS_UNDEFINED, //Initial y
+            WINDOWWIDTH,             //width
+            WINDOWHEIGHT,            //height
+            0
+            );
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
+    // Surfaces
+    printf("Loading surfaces...\n");
+    SDL_Surface *backgroundSurface = NULL;
+    backgroundSurface = IMG_Load("background.png");
+    if(backgroundSurface == NULL)
+    {
+        printf("Cannot find background.png!\n\n");
+        SDL_Quit();
+        return 1;
+    }
+    background = SDL_CreateTextureFromSurface(renderer, backgroundSurface);
+
+
+    // Load font
+    printf("Loading fonts...\n");
+    TTF_Init();
+    mainFont = TTF_OpenFont("fonts/FreeMono.ttf", 100);
+    if(!mainFont) 
+    {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
+    }
+
+    // Glyphs
+    SDL_Color color = {230, 230, 230};
+    SDL_Surface *glyphCache[128-20];
+    Uint16 ch;
+    for(ch = 20; ch < 128; ++ch)
+    {
+        glyphCache[ch - 20] = TTF_RenderGlyph_Solid(mainFont, ch, color);
+        if(glyphCache[ch - 20] == NULL)
+            printf("Glyph not found\n");
+        glyphs[ch - 20] = SDL_CreateTextureFromSurface(renderer, glyphCache[ch - 20]);
+        SDL_FreeSurface(glyphCache[ch - 20]);
+        //printf("%c: %d", (char)ch, ch);
+    }
+
+    SDL_FreeSurface(backgroundSurface);
+
+    printf("Starting...\n");
+    int done = 0;
+
+    // Load text file (chapter)
+    loadFile();
+
+    // Event Loop
+    while(!done)
+    {
+        // Check for updates
+        done = processEvents(window);
+
+        // Render display
+        doRender(renderer);
+    }
+    
+    SDL_DestroyTexture(background);
+
+    SDL_DestroyWindow(window);
+    SDL_DestroyRenderer(renderer);
+
+    SDL_Quit();
+
+    return 0;
+}
