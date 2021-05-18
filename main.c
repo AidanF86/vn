@@ -40,7 +40,7 @@ void executeCommand(char *command)
               }
               commandLength++;
        }
-       printf("Command length: %d\n", commandLength);
+       //printf("Command length: %d\n", commandLength);
        int partIndexes[partCount];
        int partSizes[partCount];
        partIndexes[0] = 0;
@@ -81,7 +81,7 @@ void executeCommand(char *command)
        {
               case 's':
               {
-                       printf("Command type is 's'\n");
+                       //printf("Command type is 's'\n");
 
                        // Get sprite index
                        int index = 0;
@@ -91,7 +91,7 @@ void executeCommand(char *command)
                        strcat(fullSpriteName, "-");
                        strcat(fullSpriteName, parts[2]);
 
-                       printf("Full sprite name: '%s'\n", fullSpriteName);
+                       //printf("Full sprite name: '%s'\n", fullSpriteName);
 
                        for(int i = 0; i < sizeof(spriteNames) / sizeof(char*); i++)
                        {
@@ -102,7 +102,7 @@ void executeCommand(char *command)
                                      break;
                               }
                        }
-                       printf("Showing sprite #%d\n", index);
+                       printf("Enabling sprite #%d\n", index);
                        // TODO: support for multiple sprites and sprite variants (not difficult, just needs to be planned about)
                        for(int i = 0; i < SPRITE_COUNT; i++)
                        {
@@ -167,7 +167,7 @@ void renderSprites(SDL_Renderer *renderer)
        {
               if(spriteEnabled[i])
               {
-                      printf("sprite scale: %d\n", spriteScales[i]);
+                      //printf("sprite scale: %d\n", spriteScales[i]);
                       double w = getLengthX(spriteDimensions[i][0] * spriteScales[i]);
                       double h = getLengthX(spriteDimensions[i][1] * spriteScales[i]);
                       //double w = 200;
@@ -176,7 +176,7 @@ void renderSprites(SDL_Renderer *renderer)
                       int y = getPixelY(spritePositions[i][1]) - h / 2.0;
                       //int x = 200;
                       //int y = 200;
-                      printf("Showing sprite #%d %s: %d, %d  %dx%d\n", i, spriteNames[i], x, y, w, h);
+                      //printf("Showing sprite #%d %s: %d, %d  %dx%d\n", i, spriteNames[i], x, y, w, h);
                       SDL_Rect spriteRect = {x, y, w, h};
                       SDL_RenderCopy(renderer, sprites[i], NULL, &spriteRect);
               }

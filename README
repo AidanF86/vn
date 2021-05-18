@@ -1,0 +1,17 @@
+Very in-progress visual novel engine
+Written by Aidan Foley
+
+TODO:
+- Change sprite system to support sprite variants and multiple characters (not very difficult)
+        - 3D sprite array?
+- Add config file which can set many variable values and can be reloaded while the game is running
+- Add partial sentence rendering so time-based text rendering can be done while the window is resized
+- Add smooth glpyh fade-in
+        - Add general animation system (using coroutines?) that this can be done with
+- Fix chunky text rendering
+        - Add fps indicator (for testing)
+- Add menu display and functionality
+- Fix save/load functions
+        - Add menu for this
+- Add support for multiple chapter files and organization of them
+        - There are multiple interesting ways to organize this
