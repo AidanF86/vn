@@ -29,7 +29,7 @@
 //#define CHARACTERS_PER_LINE (WINDOWWIDTH-2*BOXPADDINGX-2*TEXTPADDINGX)/(TEXTWIDTH+CHARACTERSPACING)
 #define CHARACTERS_PER_LINE 55
 #define LINES_PER_PAGE 16
-#define DEFAULT_SPEED 80 // ~ in chars/sec
+#define DEFAULT_SPEED 300 // in an unknown unit
 
 #define FPS_CAP 60
 
@@ -37,13 +37,13 @@ SDL_Texture *glyphs[128-20];
 SDL_Texture *background;
 TTF_Font *mainFont;
 
-#define SPRITE_COUNT 1
+#define SPRITE_COUNT 2
 
-bool spritesTiled; // Works like a tiling window manager; sprites are tiled horizontally
+bool spritesTiled; // TODO: Works like a tiling window manager; sprites are tiled horizontally
 
 SDL_Texture *sprites[SPRITE_COUNT];
 char *spriteNames[SPRITE_COUNT];
-//double spritePositions[SPRITE_COUNT][2];
+double spritePositions[SPRITE_COUNT][2];
 double spriteScales[SPRITE_COUNT];
 int spriteDimensions[SPRITE_COUNT][2];
 bool spriteEnabled[SPRITE_COUNT];

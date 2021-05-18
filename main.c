@@ -29,7 +29,7 @@ bool done;
 
 void executeCommand(char *command)
 {
-       printf("Executing command: '%s'\n", command);
+       printf("\nExecuting command: '%s'\n", command);
        int partCount = 1;
        int commandLength = 0;
        for(int i = 0; command[i] != '\0'; i++)
@@ -98,16 +98,34 @@ void executeCommand(char *command)
                               if(strcmp(spriteNames[i], fullSpriteName) == 0)
                               {
                                      index = i;
+                                     //printf("Sprite number: %d\n", index);
                                      break;
                               }
                        }
+                       printf("Showing sprite #%d\n", index);
+                       // TODO: support for multiple sprites and sprite variants (not difficult, just needs to be planned about)
+                       for(int i = 0; i < SPRITE_COUNT; i++)
+                       {
+                               if(i == index)
+                               {
+                                       spriteEnabled[i] = true;
+                               }
+                               else
+                               {
+                                       spriteEnabled[i] = false;
+                               }
+                       }
                        //free(fullSpriteName);
-                     }
+              }
                      break;
               default:
+              {
                      printf("Unrecognized command type '%c'\n", command[partIndexes[0]]);
                      break;
+              }
        }
+
+       printf("\n");
        /*
        for(int i = 0; i < partCount; i++)
        {
@@ -149,12 +167,18 @@ void renderSprites(SDL_Renderer *renderer)
        {
               if(spriteEnabled[i])
               {
-                     //double w = getLengthX(spriteDimensions[i][0] * spriteScales[i]);
-                     //double h = getLengthX(spriteDimensions[i][1] * spriteScales[i]);
-                     //int x = getPixelX(spritePositions[i][0]) - w / 2.0;
-                     //int y = getPixelY(spritePositions[i][1]) - h / 2.0;
-                     //SDL_Rect spriteRect = {x, y, w, h};
-                     //SDL_RenderCopy(renderer, sprites[i], NULL, &spriteRect);
+                      printf("sprite scale: %d\n", spriteScales[i]);
+                      double w = getLengthX(spriteDimensions[i][0] * spriteScales[i]);
+                      double h = getLengthX(spriteDimensions[i][1] * spriteScales[i]);
+                      //double w = 200;
+                      //double h = 200;
+                      int x = getPixelX(spritePositions[i][0]) - w / 2.0;
+                      int y = getPixelY(spritePositions[i][1]) - h / 2.0;
+                      //int x = 200;
+                      //int y = 200;
+                      printf("Showing sprite #%d %s: %d, %d  %dx%d\n", i, spriteNames[i], x, y, w, h);
+                      SDL_Rect spriteRect = {x, y, w, h};
+                      SDL_RenderCopy(renderer, sprites[i], NULL, &spriteRect);
               }
        }
 }
@@ -284,16 +308,15 @@ SDL_Texture *createTexture(char fileName[], SDL_Renderer *renderer)
 
 int createSpriteTexture(char spriteName[], int spriteIndex, SDL_Renderer *renderer)
 {
-       spriteNames[spriteIndex] = malloc(strlen(spriteName) * sizeof(char) + 1);
+       spriteNames[spriteIndex] = malloc(strlen(spriteName) * sizeof(char) + 1 * sizeof(char));
        strcpy(spriteNames[spriteIndex], spriteName);
+       printf("Sprite #%d name: %s\n", spriteIndex, spriteNames[spriteIndex]);
        char fileName[strlen(spriteName) + 4];
        sprintf(fileName, "%s.png", spriteName);
-       printf("File name: %s\n", fileName);
+       //printf("File name: %s\n", fileName);
        SDL_Surface *surface = loadImage(fileName);
        spriteDimensions[spriteIndex][0] = surface->w; spriteDimensions[spriteIndex][1] = surface->h;
        printf("w: %d, h: %d\n", surface->w, surface->h);
-       spriteScales[spriteIndex] = .005;
-       //spritePositions[spriteIndex][0] = 0; spritePositions[spriteIndex][1] = -5;
        sprites[spriteIndex] = SDL_CreateTextureFromSurface(renderer, surface);
        SDL_FreeSurface(surface);
        return 1;
@@ -333,10 +356,18 @@ int main()
        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
        // Surfaces
+       // TODO: streamline/simplify process, move into a config file read on startup
        background = createTexture("background.jpg", renderer);
        int spriteIndex = 0;
-       createSpriteTexture("kotomine_kirei-front", spriteIndex, renderer);
+       createSpriteTexture("obama-folded", spriteIndex, renderer);
+       spriteScales[spriteIndex] = .008;
+       spritePositions[spriteIndex][0] = 0; spritePositions[spriteIndex][1] = -2.2;
+       spriteIndex++;
+
+       createSpriteTexture("obama-wave", spriteIndex, renderer);
        spriteEnabled[spriteIndex] = true;
+       spriteScales[spriteIndex] = .0088;
+       spritePositions[spriteIndex][0] = 0.5; spritePositions[spriteIndex][1] = -2.5;
 
        // Load font
        printf("Loading fonts...\n");
