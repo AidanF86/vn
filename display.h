@@ -38,11 +38,14 @@ SDL_Texture *background;
 TTF_Font *mainFont;
 
 #define SPRITE_COUNT 2
+#define MAX_SPRITE_VARIANTS 5
 
 bool spritesTiled; // TODO: Works like a tiling window manager; sprites are tiled horizontally
 
-SDL_Texture *sprites[SPRITE_COUNT];
+SDL_Texture *sprites[SPRITE_COUNT][MAX_SPRITE_VARIANTS];
 char *spriteNames[SPRITE_COUNT];
+char *spriteVariantNames[SPRITE_COUNT][MAX_SPRITE_VARIANTS];
+
 double spritePositions[SPRITE_COUNT][2];
 double spriteScales[SPRITE_COUNT];
 int spriteDimensions[SPRITE_COUNT][2];

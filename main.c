@@ -178,7 +178,7 @@ void renderSprites(SDL_Renderer *renderer)
                       //int y = 200;
                       //printf("Showing sprite #%d %s: %d, %d  %dx%d\n", i, spriteNames[i], x, y, w, h);
                       SDL_Rect spriteRect = {x, y, w, h};
-                      SDL_RenderCopy(renderer, sprites[i], NULL, &spriteRect);
+                      SDL_RenderCopy(renderer, sprites[i][spriteVariant[i]], NULL, &spriteRect);
               }
        }
 }
@@ -306,18 +306,79 @@ SDL_Texture *createTexture(char fileName[], SDL_Renderer *renderer)
        return texture;
 }
 
-int createSpriteTexture(char spriteName[], int spriteIndex, SDL_Renderer *renderer)
+int getSpriteIndex(char spriteName[])
 {
-       spriteNames[spriteIndex] = malloc(strlen(spriteName) * sizeof(char) + 1 * sizeof(char));
-       strcpy(spriteNames[spriteIndex], spriteName);
-       printf("Sprite #%d name: %s\n", spriteIndex, spriteNames[spriteIndex]);
-       char fileName[strlen(spriteName) + 4];
-       sprintf(fileName, "%s.png", spriteName);
-       //printf("File name: %s\n", fileName);
+       for(int i = 0; i < SPRITE_COUNT; i++)
+       {
+              if(spriteNames[i] == NULL)
+              {
+                     // No index found
+                     return -i;
+              }
+              else if(strcmp(spriteName, spriteNames[i]) == 0)
+              {
+                     // Index found
+                     return i;
+              }
+       }
+}
+
+// Should have no repetitions - this is why it's different from getSpriteIndex; it should never return -1
+int getSpriteVariantIndex(char spriteName[], char spriteVariantName[])
+{
+       int spriteIndex = getSpriteIndex(spriteName);
+       if(spriteIndex == -1)
+       {
+              printf("Sprite name not found when finding sprite variant index\n");
+              return -1;
+       }
+
+       for(int i = 0; i < MAX_SPRITE_VARIANTS; i++)
+       {
+              if(spriteVariantNames[i] == NULL)
+              {
+                     // Empty index found
+                     return i;
+              }
+       }
+}
+
+int createSpriteTexture(char spriteName[], char spriteVariantName[], SDL_Renderer *renderer)
+{
+       int spriteIndex = getSpriteIndex(spriteName);
+       if(spriteIndex < 0) // Less than 0 means the name must be made at spriteIndex -(return value)
+       {
+              spriteIndex = -spriteIndex;
+              spriteNames[spriteIndex] = malloc(strlen(spriteName) * sizeof(char) + 1 * sizeof(char));
+              strcpy(spriteNames[spriteIndex], spriteName);
+              printf("Sprite #%d name: %s\n", spriteIndex, spriteNames[spriteIndex]);
+       }
+       int variantIndex = getSpriteVariantIndex(spriteName, spriteVariantName);
+       if(variantIndex == -1)
+       {
+              printf("Something went quite wrong; a nonexistent sprite name was entered along with a sprite variant name. A sprite variant needs an existing sprite name to go along with.\n");
+              return -1;
+       }
+       else
+       {
+              spriteVariantNames[spriteIndex][variantIndex] = spriteVariantName;
+              printf("Sprite #%d variant #%d: %s\n", spriteIndex, variantIndex, spriteVariant[spriteIndex, variantIndex]);
+       }
+
+       // Create filename from spriteName and spriteVariantName
+       // This won't be correct without proper filename formatting as documented in info.txt
+       //
+       // TODO hopefully the parsing and inpt of spriteName and spriteVariantName can be highly automated
+       // so the user doesn't even have to type in which image files to use, it just takes all of the
+       // properly formatted ones in a folder and automatically sorts them
+       char fileName[strlen(spriteName) + 1 + strlen(spriteVariantName) + 4];
+       sprintf(fileName, "%s-%s.png", spriteName, spriteVariantName);
+       printf("File name: %s\n", fileName);
+
        SDL_Surface *surface = loadImage(fileName);
        spriteDimensions[spriteIndex][0] = surface->w; spriteDimensions[spriteIndex][1] = surface->h;
        printf("w: %d, h: %d\n", surface->w, surface->h);
-       sprites[spriteIndex] = SDL_CreateTextureFromSurface(renderer, surface);
+       sprites[spriteIndex][variantIndex] = SDL_CreateTextureFromSurface(renderer, surface);
        SDL_FreeSurface(surface);
        return 1;
 }
@@ -355,16 +416,30 @@ int main()
                      );
        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
+       /* ------ NULLify pointers ----- */
+       for(int i = 0; i < SPRITE_COUNT; i++)
+       {
+              spriteNames[i] = NULL;
+       }
+       for(int i = 0; i < SPRITE_COUNT; i++)
+       {
+              for(int a = 0; a < MAX_SPRITE_VARIANTS; a++)
+              {
+                     spriteVariantNames[i][a] = NULL;
+              }
+       }
+       /* ------ Pointers NULLified ----- */
+
        // Surfaces
        // TODO: streamline/simplify process, move into a config file read on startup
        background = createTexture("background.jpg", renderer);
        int spriteIndex = 0;
-       createSpriteTexture("obama-folded", spriteIndex, renderer);
+       createSpriteTexture("obama", "folded", renderer);
        spriteScales[spriteIndex] = .008;
        spritePositions[spriteIndex][0] = 0; spritePositions[spriteIndex][1] = -2.2;
        spriteIndex++;
 
-       createSpriteTexture("obama-wave", spriteIndex, renderer);
+       createSpriteTexture("obama", "wave", renderer);
        spriteEnabled[spriteIndex] = true;
        spriteScales[spriteIndex] = .0088;
        spritePositions[spriteIndex][0] = 0.5; spritePositions[spriteIndex][1] = -2.5;
